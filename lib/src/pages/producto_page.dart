@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:formvalidation/src/models/producto_model.dart';
+import 'package:formvalidation/src/providers/productos_provider.dart';
 import 'package:formvalidation/src/utils/util.dart' as util;
 
 class ProductoPage extends StatefulWidget {
@@ -8,6 +10,7 @@ class ProductoPage extends StatefulWidget {
 
 class _ProductoPageState extends State<ProductoPage> {
   final formKey = GlobalKey<FormState>();
+  ProductoModel producto = ProductoModel();
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +34,12 @@ class _ProductoPageState extends State<ProductoPage> {
           child: Form(
             key: formKey,
             child: Column(
-              children: <Widget>[_crearNombre(), _crearPrecio(), _crearBoton()],
+              children: <Widget>[
+                _crearNombre(),
+                _crearPrecio(),
+                _crearBoton(),
+                _crearDisponible()
+              ],
             ),
           ),
         ),
@@ -41,8 +49,10 @@ class _ProductoPageState extends State<ProductoPage> {
 
   Widget _crearNombre() {
     return TextFormField(
+      initialValue: producto.titulo,
       textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(labelText: 'Producto'),
+      onSaved: (valor) => producto.titulo = valor,
       validator: (data) =>
           data.length <= 3 ? 'Ingrese el nombre del producto' : null,
     );
@@ -50,9 +60,11 @@ class _ProductoPageState extends State<ProductoPage> {
 
   Widget _crearPrecio() {
     return TextFormField(
+      initialValue: producto.valor.toString(),
       keyboardType: TextInputType.numberWithOptions(decimal: true),
       decoration: InputDecoration(labelText: 'Precio'),
-      validator: (data) => !util.isNumeric(data) ?'Solo numeros':null,
+      onSaved: (value) => producto.valor = double.parse(value),
+      validator: (data) => !util.isNumeric(data) ? 'Solo numeros' : null,
     );
   }
 
@@ -70,9 +82,27 @@ class _ProductoPageState extends State<ProductoPage> {
   }
 
   _submit() {
-    if(!formKey.currentState.validate()) return;
+    if (!formKey.currentState.validate()) return;
+    formKey.currentState.save(); // guarda el estado del form
 
     print('todo ok');
+    print(producto.titulo);
+    print(producto.valor);
 
+
+    final productoProvider = new ProductosProvider();
+    productoProvider.creatProducto(producto);
+
+  }
+
+  Widget _crearDisponible() {
+    return SwitchListTile(
+      value: producto.disponible,
+      title: Text('Disponible'),
+      activeColor: Colors.deepPurple,
+      onChanged: (value) => setState((){
+        producto.disponible = value;
+      }),
+    );
   }
 }
